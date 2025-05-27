@@ -142,7 +142,7 @@ st.markdown("""
 @st.cache_data
 def load_data():
     try:
-        df = pd.read_csv(r"C:\Users\NOTE2\조원C&I\선거여론조사법령\정치관계법_사례통합_요약테이블.csv")
+        df = pd.read_csv(정치관계법_사례통합_요약테이블.csv)
         return df
     except FileNotFoundError:
         st.error("⚠️ CSV 파일을 찾을 수 없습니다. 파일 경로를 확인해주세요.")
