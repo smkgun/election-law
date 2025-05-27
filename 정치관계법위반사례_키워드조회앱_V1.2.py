@@ -215,8 +215,10 @@ if not df.empty:
     st.markdown("""
     <div class="main-header">
         <div class="main-title">⚖️ 정치관계법 사례 간편 조회 시스템</div>
-        <div class="main-subtitle">제21대 대통령선거 정치관계법 사례예시집 기반 Ver.250527</div>
+        <div class="main-subtitle">제21대 대통령선거 정치관계법 사례예시집 기반</div>
+        <div class="main-subtitle">Ver.250527 |  Data-Insight LAB by Carl</div>
     </div>
+    
     """, unsafe_allow_html=True)
 
     # 위반 여부 가이드
