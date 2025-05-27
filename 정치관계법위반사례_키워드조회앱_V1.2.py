@@ -198,6 +198,29 @@ def extract_keywords(text_series, top_n=25):
     freq = Counter(words)
     return [word for word, _ in freq.most_common(top_n)]
 
+# 다중 키워드 AND 검색 함수
+def search_multiple_keywords(df, keywords_string):
+    """쉼표로 구분된 키워드들을 AND 조건으로 검색"""
+    keywords = [k.strip() for k in keywords_string.split(',') if k.strip()]
+    
+    if not keywords:
+        return df[df.index < 0]  # 빈 DataFrame 반환
+    
+    target_text = (
+        df['대분류'].astype(str) + " " +
+        df['소분류'].astype(str) + " " +
+        df['사실관계'].astype(str) + " " +
+        df['해설'].astype(str)
+    )
+    
+    # 모든 키워드를 포함하는 행만 필터링 (AND 조건)
+    mask = target_text.str.lower().str.contains(keywords[0].lower(), na=False)
+    
+    for keyword in keywords[1:]:
+        mask = mask & target_text.str.lower().str.contains(keyword.lower(), na=False)
+    
+    return df[mask], keywords
+
 # 키워드 준비
 if not df.empty:
     if 'keywords' not in st.session_state:
@@ -253,26 +276,47 @@ if not df.empty:
 
     with col2:
         st.markdown("**✏️ 직접 키워드 입력**")
-        manual_input = st.text_input("키워드 입력", label_visibility="collapsed", placeholder="검색할 키워드를 입력하세요")
+        manual_input = st.text_input("키워드 입력", label_visibility="collapsed", 
+                                   placeholder="키워드를 입력하세요 (여러 키워드는 쉼표로 구분, 예: 선거운동,홍보물)")
 
-    search_term = selected if selected else manual_input
-
-    if search_term:
+    # 검색 처리
+    if selected:
+        # 단일 키워드 검색 (선택박스)
         target_text = (
             df['대분류'].astype(str) + " " +
             df['소분류'].astype(str) + " " +
             df['사실관계'].astype(str) + " " +
             df['해설'].astype(str)
         )
-        result = df[target_text.str.lower().str.contains(search_term.lower(), na=False)]
+        result = df[target_text.str.lower().str.contains(selected.lower(), na=False)]
+        search_keywords = [selected]
+        search_term = selected
+        
+    elif manual_input:
+        # 다중 키워드 AND 검색 (직접 입력)
+        result, search_keywords = search_multiple_keywords(df, manual_input)
+        search_term = manual_input
+    else:
+        result = None
+        search_keywords = []
+        search_term = ""
 
+    if search_term and result is not None:
         if not result.empty:
             # 검색 결과 통계
-            st.markdown(f"""
-            <div class="result-stats">
-                🎯 <strong>'{search_term}'</strong> 검색결과: 총 <strong>{len(result)}건</strong>의 사례가 검색되었습니다
-            </div>
-            """, unsafe_allow_html=True)
+            if len(search_keywords) > 1:
+                keywords_display = " AND ".join([f"'{k}'" for k in search_keywords])
+                st.markdown(f"""
+                <div class="result-stats">
+                    🎯 <strong>{keywords_display}</strong> 검색결과: 총 <strong>{len(result)}건</strong>의 사례가 검색되었습니다
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div class="result-stats">
+                    🎯 <strong>'{search_term}'</strong> 검색결과: 총 <strong>{len(result)}건</strong>의 사례가 검색되었습니다
+                </div>
+                """, unsafe_allow_html=True)
 
             display_df = result[['대분류', '소분류', '사실관계', '법조항', '위반여부', '해설']].reset_index(drop=True)
 
@@ -300,18 +344,25 @@ if not df.empty:
             )
 
         else:
-            st.markdown("""
-            <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 1rem; border-radius: 6px; text-align: center; color: #dc2626;">
-                🔍 '<strong>{}</strong>'에 대한 검색 결과가 없습니다.<br>
-                다른 키워드로 다시 검색해보세요.
-            </div>
-            """.format(search_term), unsafe_allow_html=True)
+            if len(search_keywords) > 1:
+                keywords_display = " AND ".join([f"'{k}'" for k in search_keywords])
+                st.markdown(f"""
+                <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 1rem; border-radius: 6px; text-align: center; color: #dc2626;">
+                    🔍 <strong>{keywords_display}</strong>를 모두 포함하는 검색 결과가 없습니다.<br>
+                    다른 키워드 조합으로 다시 검색해보세요.
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 1rem; border-radius: 6px; text-align: center; color: #dc2626;">
+                    🔍 '<strong>{search_term}</strong>'에 대한 검색 결과가 없습니다.<br>
+                    다른 키워드로 다시 검색해보세요.
+                </div>
+                """, unsafe_allow_html=True)
 
-
- # 푸터
+    # 푸터
     st.markdown("---")
     
-     
     st.warning("⚠️ **중요 안내:** 이 검색 결과는 참고용입니다.")
     
     st.info("""
@@ -326,4 +377,3 @@ if not df.empty:
         <div class="footer-title">🏛️ Data-Insight LAB by Carl</div>
     </div>
     """, unsafe_allow_html=True)
-    
