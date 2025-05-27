@@ -374,6 +374,6 @@ if not df.empty:
      
     st.markdown("""
     <div class="footer-section">
-        <div class="footer-title">🏛️ Data-Insight LAB by Carl</div>
+        <div class="footer-title">🏛️ Data-Insight LAB by Carl <br> Email: datastory2025@gmail.com</div>
     </div>
     """, unsafe_allow_html=True)
