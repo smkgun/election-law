@@ -5,7 +5,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 
 class TfidfSearcher:
-    def __init__(self, index_dir: str = "./index"):
+    def __init__(self, index_dir: str = "."):
         with open(Path(index_dir) / "artifacts.pkl", "rb") as f:
             obj = pickle.load(f)
         if obj.get("backend") != "tfidf":
