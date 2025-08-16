@@ -18,7 +18,7 @@ with st.sidebar:
 
 @st.cache_resource(show_spinner=True)
 def get_searcher():
-    return TfidfSearcher(index_dir="./index")
+    return TfidfSearcher(index_dir=".")
 
 searcher = get_searcher()
 retriever = Retriever(searcher)
